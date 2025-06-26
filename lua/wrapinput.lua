@@ -38,7 +38,7 @@ local defaults = {
 local function get_relative_win_config()
 	local curr_win = vim.api.nvim_get_current_win()
 	local cursor_row = vim.api.nvim_win_get_cursor(curr_win)[1]
-	if cursor_row == 1 then
+	if cursor_row <= 3 then
 		return { anchor = "NW", row = 1 }
 	else
 		return { anchor = "SW", row = 0 }
@@ -114,7 +114,6 @@ local function resize(winnr, bufnr, config)
 
 	local lines = guesstimate_wrapped_lines(line, config.max_width)
 
-	-- set width
 	local lens = vim.tbl_map(function(l)
 		return vim.fn.strdisplaywidth(l)
 	end, lines)
@@ -122,7 +121,6 @@ local function resize(winnr, bufnr, config)
 	width = width > config.max_width and config.max_width or width
 	vim.api.nvim_win_set_width(winnr, width + 1)
 
-	-- set height
 	local height = #lines
 	height = height > config.max_height and config.max_height or height
 	vim.api.nvim_win_set_height(winnr, height)
