@@ -22,8 +22,8 @@ local defaults = {
 	prompt = default_prompt,
 	default = "",
 	padding = 20,
-	max_width = 50,
-	max_height = 8,
+	max_width = 60,
+	max_height = 6,
 	win = {
 		title = default_prompt,
 		style = "minimal",
@@ -173,9 +173,10 @@ local function setup_mappings(winnr, bufnr, on_confirm)
 end
 
 ---@param config wrapinput.Config
+---@param opts table
 ---@param on_confirm fun(input: string?)
-function M.input(config, on_confirm)
-	config = vim.tbl_deep_extend("force", defaults, config, { win = { title = config.prompt } })
+function M.input(config, opts, on_confirm)
+	config = vim.tbl_deep_extend("force", defaults, config, opts, { win = { title = config.prompt } })
 	on_confirm = on_confirm or function() end
 
 	config = vim.tbl_deep_extend(
@@ -204,11 +205,10 @@ function M.input(config, on_confirm)
 	setup_autocmds(winnr, bufnr, config)
 end
 
----@param config? wrapinput.UserConfig
+---@param config? wrapinput.Config
 function M.setup(config)
 	vim.ui.input = function(opts, on_confirm)
-		config = vim.tbl_deep_extend("force", config or {}, opts or {})
-		M.input(config --[[@as wrapinput.Config]], on_confirm)
+		M.input(config or {}, opts or {}, on_confirm)
 	end
 end
 
