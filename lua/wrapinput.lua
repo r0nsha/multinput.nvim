@@ -1,3 +1,9 @@
+---@class wrapinput.UserConfig
+---@field padding? integer
+---@field max_width? integer
+---@field max_height? integer
+---@field win? vim.api.keyset.win_config
+
 ---@class wrapinput.Config
 ---@field prompt string
 ---@field default string
@@ -198,6 +204,14 @@ function M.input(config, on_confirm)
 
 	setup_mappings(winnr, bufnr, on_confirm)
 	setup_autocmds(winnr, bufnr, config)
+end
+
+---@param config? wrapinput.UserConfig
+function M.setup(config)
+	vim.ui.input = function(opts, on_confirm)
+		config = vim.tbl_deep_extend("force", config or {}, opts or {})
+		M.input(config --[[@as wrapinput.Config]], on_confirm)
+	end
 end
 
 return M
