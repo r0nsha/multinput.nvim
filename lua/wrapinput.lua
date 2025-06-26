@@ -1,5 +1,4 @@
 ---@class wrapinput.Config
----@field prompt string
 ---@field default string
 ---@field padding integer
 ---@field max_width integer
@@ -7,19 +6,17 @@
 ---@field win vim.api.keyset.win_config
 
 local group = vim.api.nvim_create_augroup("wrapinput.nvim", { clear = true })
-local default_prompt = "Input: "
 
 local M = {}
 
 ---@type wrapinput.Config
 local defaults = {
-	prompt = default_prompt,
 	default = "",
 	padding = 20,
 	max_width = 60,
 	max_height = 6,
 	win = {
-		title = default_prompt,
+		title = "Input: ",
 		style = "minimal",
 		focusable = true,
 		relative = "cursor",
