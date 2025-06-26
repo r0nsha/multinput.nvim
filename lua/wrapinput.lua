@@ -1,9 +1,3 @@
----@class wrapinput.UserConfig
----@field padding? integer
----@field max_width? integer
----@field max_height? integer
----@field win? vim.api.keyset.win_config
-
 ---@class wrapinput.Config
 ---@field prompt string
 ---@field default string
