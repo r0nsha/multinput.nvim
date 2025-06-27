@@ -45,10 +45,7 @@ function Input:open(default)
 
     -- Create buffer and floating window.
     self.bufnr = vim.api.nvim_create_buf(false, true)
-    utils.set_options(
-        { buftype = "prompt", bufhidden = "wipe", textwidth = self.config.width.max },
-        { buf = self.bufnr }
-    )
+    utils.set_options({ buftype = "prompt", bufhidden = "wipe" }, { buf = self.bufnr })
     vim.fn.prompt_setprompt(self.bufnr, "")
 
     self.winnr = vim.api.nvim_open_win(self.bufnr, true, self.config.win)
@@ -58,7 +55,7 @@ function Input:open(default)
     )
 
     -- Write default value and put cursor at the end
-    vim.api.nvim_buf_set_text(self.bufnr, 0, 0, 0, 0, { default })
+    vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, true, { default })
     vim.cmd "startinsert"
     vim.api.nvim_win_set_cursor(
         self.winnr,
