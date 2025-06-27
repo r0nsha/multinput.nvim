@@ -10,8 +10,8 @@ local Input = {}
 local defaults = {
 	opts = { numbers = "multiline" },
 	padding = 5,
-	width = { min = 20, max = 60 },
-	height = { min = 1, max = 6 },
+	width = { min = 10, max = 50 },
+	height = { min = 1, max = 8 },
 	win = {
 		title = "Input: ",
 		style = "minimal",
