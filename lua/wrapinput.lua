@@ -1,20 +1,20 @@
 ---@class wrapinput.Config
----@field default string
+---@field width wrapinput.Limits
+---@field height wrapinput.Limits
 ---@field padding integer
----@field max_width integer
----@field max_height integer
 ---@field win vim.api.keyset.win_config
+
+---@class wrapinput.Limits
+---@field min integer
+---@field max integer
 
 local group = vim.api.nvim_create_augroup("wrapinput.nvim", { clear = true })
 
-local M = {}
-
 ---@type wrapinput.Config
 local defaults = {
-	default = "",
-	padding = 10,
-	max_width = 50,
-	max_height = 6,
+	padding = 5,
+	width = { min = 20, max = 60 },
+	height = { min = 1, max = 6 },
 	win = {
 		title = "Input: ",
 		style = "minimal",
@@ -24,6 +24,14 @@ local defaults = {
 		height = 1,
 	},
 }
+
+---@param value number
+---@param min number
+---@param max number
+---@return number
+local function clamp(value, min, max)
+	return math.min(math.max(value, min), max)
+end
 
 ---@return vim.api.keyset.win_config
 local function get_relative_win_config()
@@ -60,6 +68,14 @@ local function split_wrapped_lines(text, width)
 	return lines
 end
 
+---@param option string
+---@param winnr integer
+local function set_option_if_globally_enabled(option, winnr)
+	if vim.api.nvim_get_option_value(option, { scope = "global" }) then
+		vim.api.nvim_set_option_value(option, true, { win = winnr })
+	end
+end
+
 ---@param winnr integer
 ---@param bufnr integer
 ---@param config wrapinput.Config
@@ -68,23 +84,26 @@ local function resize(winnr, bufnr, config)
 	local line = table.concat(text, "")
 
 	if line == "" then
-		vim.api.nvim_win_set_width(winnr, config.padding)
+		vim.api.nvim_win_set_width(winnr, clamp(config.padding, config.width.min, config.width.max))
 		vim.api.nvim_win_set_height(winnr, 1)
 		return
 	end
 
-	local lines = split_wrapped_lines(line, config.max_width)
+	local lines = split_wrapped_lines(line, config.width.max)
 
 	local lens = vim.tbl_map(function(l)
 		return vim.fn.strdisplaywidth(l)
 	end, lines)
-	local width = math.max(unpack(lens)) + config.padding
-	width = width > config.max_width and config.max_width or width
-	vim.api.nvim_win_set_width(winnr, width + 1)
+	local width = clamp(math.max(unpack(lens)) + config.padding + #lines, config.width.min, config.width.max + #lines)
+	vim.api.nvim_win_set_width(winnr, width)
 
-	local height = #lines
-	height = height > config.max_height and config.max_height or height
+	local height = clamp(#lines, config.height.min, config.height.max)
 	vim.api.nvim_win_set_height(winnr, height)
+
+	if height > 1 then
+		set_option_if_globally_enabled("number", winnr)
+		set_option_if_globally_enabled("relativenumber", winnr)
+	end
 end
 
 ---@param winnr integer
@@ -133,32 +152,32 @@ local function setup_mappings(winnr, bufnr, on_confirm)
 	map("n", "q", close)
 end
 
+local M = {}
+
 ---@param config wrapinput.Config
 ---@param opts table
 ---@param on_confirm fun(input: string?)
 function M.input(config, opts, on_confirm)
-	config = vim.tbl_deep_extend("force", defaults, config, opts, { win = { title = opts.prompt } })
+	config = vim.tbl_deep_extend("force", defaults, config, { win = { title = opts.prompt } })
+	local default = opts.default or ""
 	on_confirm = on_confirm or function() end
 
-	config = vim.tbl_deep_extend(
-		"keep",
-		config,
-		{ win = get_relative_win_config() },
-		{ win = { width = vim.fn.strdisplaywidth(config.default) + config.padding } }
-	)
+	local width = clamp(vim.fn.strdisplaywidth(default) + config.padding, config.width.min, config.width.max)
+	vim.notify("width: " .. tostring(width))
+	config = vim.tbl_deep_extend("keep", config, { win = get_relative_win_config() }, { win = { width = width } })
 
 	-- Create buffer and floating window.
 	local bufnr = vim.api.nvim_create_buf(false, true)
-	set_options({ buftype = "prompt", bufhidden = "wipe", textwidth = config.max_width }, { buf = bufnr })
+	set_options({ buftype = "prompt", bufhidden = "wipe", textwidth = config.width.max }, { buf = bufnr })
 	vim.fn.prompt_setprompt(bufnr, "")
 
 	local winnr = vim.api.nvim_open_win(bufnr, true, config.win)
 	set_options({ wrap = true, linebreak = true, winhighlight = "Search:None" }, { win = winnr })
 
 	-- write default value and put cursor at the end
-	vim.api.nvim_buf_set_text(bufnr, 0, 0, 0, 0, { config.default })
+	vim.api.nvim_buf_set_text(bufnr, 0, 0, 0, 0, { default })
 	vim.cmd("startinsert")
-	vim.api.nvim_win_set_cursor(winnr, { 1, vim.str_utfindex(config.default, "utf-8") + 1 })
+	vim.api.nvim_win_set_cursor(winnr, { 1, vim.str_utfindex(default, "utf-8") + 1 })
 
 	resize(winnr, bufnr, config)
 
