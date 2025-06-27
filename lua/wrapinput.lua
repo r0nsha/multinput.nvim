@@ -12,8 +12,8 @@ local M = {}
 ---@type wrapinput.Config
 local defaults = {
 	default = "",
-	padding = 20,
-	max_width = 60,
+	padding = 10,
+	max_width = 50,
 	max_height = 6,
 	win = {
 		title = "Input: ",
@@ -39,63 +39,33 @@ end
 ---@param text string
 ---@param width integer
 ---@return string[]
-local function guesstimate_wrapped_lines(text, width)
-	local breakat = vim.o.breakat
-	local linebreak = vim.wo.linebreak
-	local showbreak = vim.o.showbreak
-	local showbreak_width = vim.fn.strdisplaywidth(showbreak)
-
-	local result = {}
-	local current_line = ""
-	local current_width = 0
-	local last_break_idx = nil
-
-	local i = 1
-	while i <= #text do
-		local char = text:sub(i, i)
-
-		local char_width = vim.fn.strdisplaywidth(char)
-
-		-- Track legal break point
-		if breakat:find(vim.pesc(char), 1, true) then
-			last_break_idx = #current_line + 1
-		end
-
-		-- If this char would overflow screen width
-		if current_width + char_width > width then
-			if linebreak and last_break_idx then
-				table.insert(result, current_line:sub(1, last_break_idx))
-				i = i - (#current_line - last_break_idx)
-			elseif last_break_idx then
-				table.insert(result, current_line:sub(1, last_break_idx))
-				i = i - (#current_line - last_break_idx)
-			else
-				table.insert(result, current_line)
-			end
-
-			-- Reset for wrapped line
-			current_line = showbreak
-			current_width = showbreak_width
-			last_break_idx = nil
-		else
-			current_line = current_line .. char
-			current_width = current_width + char_width
-			i = i + 1
-		end
+local function split_wrapped_lines(text, width)
+	if text == "" then
+		return {}
 	end
 
-	if #current_line > 0 then
-		table.insert(result, current_line)
+	---@type string[]
+	local lines = {}
+	local textlen = vim.fn.strchars(text, true)
+
+	local i = 0
+	while i < textlen do
+		local len = i + width <= textlen and width or textlen - i
+		local new_line = vim.fn.strcharpart(text, i, len)
+
+		table.insert(lines, new_line)
+		i = i + len
 	end
 
-	return result
+	return lines
 end
 
 ---@param winnr integer
 ---@param bufnr integer
 ---@param config wrapinput.Config
 local function resize(winnr, bufnr, config)
-	local line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
+	local text = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local line = table.concat(text, "")
 
 	if line == "" then
 		vim.api.nvim_win_set_width(winnr, config.padding)
@@ -103,7 +73,7 @@ local function resize(winnr, bufnr, config)
 		return
 	end
 
-	local lines = guesstimate_wrapped_lines(line, config.max_width)
+	local lines = split_wrapped_lines(line, config.max_width)
 
 	local lens = vim.tbl_map(function(l)
 		return vim.fn.strdisplaywidth(l)
@@ -167,7 +137,7 @@ end
 ---@param opts table
 ---@param on_confirm fun(input: string?)
 function M.input(config, opts, on_confirm)
-	config = vim.tbl_deep_extend("force", defaults, config, opts, { win = { title = config.prompt } })
+	config = vim.tbl_deep_extend("force", defaults, config, opts, { win = { title = opts.prompt } })
 	on_confirm = on_confirm or function() end
 
 	config = vim.tbl_deep_extend(
