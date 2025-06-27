@@ -18,7 +18,7 @@
 return {
     ---@type multinput.Config
     defaults = {
-        opts = { numbers = "multiline" },
+        opts = { numbers = "never" },
         padding = 5,
         width = { min = 20, max = 60 },
         height = { min = 1, max = 6 },
