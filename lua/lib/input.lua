@@ -83,16 +83,22 @@ function Input:set_numbers(height)
         or vim.api.nvim_get_option_value("relativenumber", { win = self.winnr })
 end
 
-function Input:resize_empty()
-    local height = 1
-    vim.api.nvim_win_set_height(self.winnr, height)
+---@param width integer
+---@param height integer
+function Input:set_size(width, height)
+    local h = utils.clamp(height, self.config.height.min, self.config.height.max)
+    vim.api.nvim_win_set_height(self.winnr, h)
 
-    local width =
-        utils.clamp(self.config.padding, self.config.width.min, self.config.width.max)
-    width = self:set_numbers(height)
-            and width + utils.get_linenr_width(self.winnr, self.bufnr)
-        or width
-    vim.api.nvim_win_set_width(self.winnr, width)
+    local w = utils.clamp(
+        width + self.config.padding,
+        self.config.width.min,
+        self.config.width.max
+    )
+
+    local has_numbers = self:set_numbers(h)
+    w = has_numbers and w + utils.get_linenr_width(self.winnr, self.bufnr) or w
+    w = w + 2 -- HACK: add padding to avoid glitches
+    vim.api.nvim_win_set_width(self.winnr, w)
 end
 
 function Input:resize()
@@ -100,28 +106,17 @@ function Input:resize()
     local line = table.concat(text, "")
 
     if line == "" then
-        self:resize_empty()
+        self:set_size(0, 1)
         return
     end
 
     local lines = utils.split_wrapped_lines(line, self.config.width.max)
 
-    local height = utils.clamp(#lines, self.config.height.min, self.config.height.max)
-    vim.api.nvim_win_set_height(self.winnr, height)
-
     local lens = vim.tbl_map(function(l)
         return vim.fn.strdisplaywidth(l)
     end, lines)
-    local width = utils.clamp(
-        math.max(unpack(lens)) + self.config.padding,
-        self.config.width.min,
-        self.config.width.max
-    )
 
-    width = self:set_numbers(height)
-            and width + utils.get_linenr_width(self.winnr, self.bufnr)
-        or width
-    vim.api.nvim_win_set_width(self.winnr, width)
+    self:set_size(math.max(unpack(lens)), #lines)
 end
 
 function Input:autocmds()
