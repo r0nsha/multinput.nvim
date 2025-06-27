@@ -74,9 +74,9 @@ function Input:close(result)
     self.on_confirm(result)
 end
 
----@param width integer
 ---@param height integer
-function Input:set_numbers(width, height)
+---@return boolean
+function Input:set_numbers(height)
     if
         self.config.opts.numbers == "always"
         or (self.config.opts.numbers == "multiline" and height > 1)
@@ -85,12 +85,18 @@ function Input:set_numbers(width, height)
         utils.set_option_if_globally_enabled("relativenumber", self.winnr)
     end
 
-    if
-        vim.api.nvim_get_option_value("number", { win = self.winnr })
+    return vim.api.nvim_get_option_value("number", { win = self.winnr })
         or vim.api.nvim_get_option_value("relativenumber", { win = self.winnr })
-    then
-        vim.api.nvim_win_set_width(self.winnr, width + utils.get_linenr_width())
-    end
+end
+
+function Input:resize_empty()
+    local height = 1
+    vim.api.nvim_win_set_height(self.winnr, height)
+
+    local width =
+        utils.clamp(self.config.padding, self.config.width.min, self.config.width.max)
+    width = self:set_numbers(height) and width + utils.get_linenr_width() or width
+    vim.api.nvim_win_set_width(self.winnr, width)
 end
 
 function Input:resize()
@@ -98,19 +104,14 @@ function Input:resize()
     local line = table.concat(text, "")
 
     if line == "" then
-        local width = utils.clamp(
-            self.config.padding,
-            self.config.width.min,
-            self.config.width.max
-        )
-        local height = 1
-        vim.api.nvim_win_set_width(self.winnr, width)
-        vim.api.nvim_win_set_height(self.winnr, height)
-        self:set_numbers(width, height)
+        self:resize_empty()
         return
     end
 
     local lines = utils.split_wrapped_lines(line, self.config.width.max)
+
+    local height = utils.clamp(#lines, self.config.height.min, self.config.height.max)
+    vim.api.nvim_win_set_height(self.winnr, height)
 
     local lens = vim.tbl_map(function(l)
         return vim.fn.strdisplaywidth(l)
@@ -120,12 +121,9 @@ function Input:resize()
         self.config.width.min,
         self.config.width.max
     )
+
+    width = self:set_numbers(height) and width + utils.get_linenr_width() or width
     vim.api.nvim_win_set_width(self.winnr, width)
-
-    local height = utils.clamp(#lines, self.config.height.min, self.config.height.max)
-    vim.api.nvim_win_set_height(self.winnr, height)
-
-    self:set_numbers(width, height)
 end
 
 function Input:autocmds()
