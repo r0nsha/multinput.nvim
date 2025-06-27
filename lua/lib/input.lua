@@ -1,4 +1,5 @@
 local utils = require "lib.utils"
+local defaults = require("lib.config").defaults
 
 ---@class multinput.Input
 ---@field config multinput.Config
@@ -6,21 +7,6 @@ local utils = require "lib.utils"
 ---@field bufnr integer
 ---@field on_confirm fun(input?: string)
 local Input = {}
-
-local defaults = {
-    opts = { numbers = "multiline" },
-    padding = 5,
-    width = { min = 10, max = 50 },
-    height = { min = 1, max = 8 },
-    win = {
-        title = "Input: ",
-        style = "minimal",
-        focusable = true,
-        relative = "cursor",
-        col = -1,
-        height = 1,
-    },
-}
 
 local group = vim.api.nvim_create_augroup("multinput.nvim", { clear = true })
 
