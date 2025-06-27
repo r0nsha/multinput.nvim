@@ -77,38 +77,9 @@ function Input:close(result)
     self.on_confirm(result)
 end
 
-function Input:resize()
-    local text = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false)
-    local line = table.concat(text, "")
-
-    if line == "" then
-        vim.api.nvim_win_set_width(
-            self.winnr,
-            utils.clamp(
-                self.config.padding,
-                self.config.width.min,
-                self.config.width.max
-            )
-        )
-        vim.api.nvim_win_set_height(self.winnr, 1)
-        return
-    end
-
-    local lines = utils.split_wrapped_lines(line, self.config.width.max)
-
-    local lens = vim.tbl_map(function(l)
-        return vim.fn.strdisplaywidth(l)
-    end, lines)
-    local width = utils.clamp(
-        math.max(unpack(lens)) + self.config.padding,
-        self.config.width.min,
-        self.config.width.max + #lines
-    )
-    vim.api.nvim_win_set_width(self.winnr, width)
-
-    local height = utils.clamp(#lines, self.config.height.min, self.config.height.max)
-    vim.api.nvim_win_set_height(self.winnr, height)
-
+---@param width integer
+---@param height integer
+function Input:set_numbers(width, height)
     if
         self.config.opts.numbers == "always"
         or (self.config.opts.numbers == "multiline" and height > 1)
@@ -123,6 +94,41 @@ function Input:resize()
     then
         vim.api.nvim_win_set_width(self.winnr, width + utils.get_linenr_width())
     end
+end
+
+function Input:resize()
+    local text = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false)
+    local line = table.concat(text, "")
+
+    if line == "" then
+        local width = utils.clamp(
+            self.config.padding,
+            self.config.width.min,
+            self.config.width.max
+        )
+        local height = 1
+        vim.api.nvim_win_set_width(self.winnr, width)
+        vim.api.nvim_win_set_height(self.winnr, height)
+        self:set_numbers(width, height)
+        return
+    end
+
+    local lines = utils.split_wrapped_lines(line, self.config.width.max)
+
+    local lens = vim.tbl_map(function(l)
+        return vim.fn.strdisplaywidth(l)
+    end, lines)
+    local width = utils.clamp(
+        math.max(unpack(lens)) + self.config.padding,
+        self.config.width.min,
+        self.config.width.max
+    )
+    vim.api.nvim_win_set_width(self.winnr, width)
+
+    local height = utils.clamp(#lines, self.config.height.min, self.config.height.max)
+    vim.api.nvim_win_set_height(self.winnr, height)
+
+    self:set_numbers(width, height)
 end
 
 function Input:autocmds()
