@@ -48,11 +48,14 @@ function M.split_wrapped_lines(text, width)
     return lines
 end
 
-function M.get_linenr_width()
-    local line_count = vim.api.nvim_buf_line_count(0)
+---@param winnr integer
+---@param bufnr integer
+---@return integer
+function M.get_linenr_width(winnr, bufnr)
+    local line_count = vim.api.nvim_buf_line_count(bufnr)
     local line_digits = math.floor(math.log10(math.max(1, line_count))) + 1
-    local numberwidth_opt = vim.opt.numberwidth:get()
-    return math.max(line_digits, numberwidth_opt)
+    local numberwidth = vim.api.nvim_get_option_value("numberwidth", { win = winnr })
+    return math.max(line_digits, numberwidth)
 end
 
 return M

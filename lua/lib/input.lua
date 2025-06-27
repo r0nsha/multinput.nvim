@@ -89,7 +89,9 @@ function Input:resize_empty()
 
     local width =
         utils.clamp(self.config.padding, self.config.width.min, self.config.width.max)
-    width = self:set_numbers(height) and width + utils.get_linenr_width() or width
+    width = self:set_numbers(height)
+            and width + utils.get_linenr_width(self.winnr, self.bufnr)
+        or width
     vim.api.nvim_win_set_width(self.winnr, width)
 end
 
@@ -116,7 +118,9 @@ function Input:resize()
         self.config.width.max
     )
 
-    width = self:set_numbers(height) and width + utils.get_linenr_width() or width
+    width = self:set_numbers(height)
+            and width + utils.get_linenr_width(self.winnr, self.bufnr)
+        or width
     vim.api.nvim_win_set_width(self.winnr, width)
 end
 
