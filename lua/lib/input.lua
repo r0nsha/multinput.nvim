@@ -1,7 +1,7 @@
 local utils = require("lib.utils")
 
----@class wrapinput.Input
----@field config wrapinput.Config
+---@class multinput.Input
+---@field config multinput.Config
 ---@field winnr integer
 ---@field bufnr integer
 ---@field on_confirm fun(input?: string)
@@ -22,9 +22,9 @@ local defaults = {
 	},
 }
 
-local group = vim.api.nvim_create_augroup("wrapinput.nvim", { clear = true })
+local group = vim.api.nvim_create_augroup("multinput.nvim", { clear = true })
 
----@param config wrapinput.Config
+---@param config multinput.Config
 ---@param opts any
 ---@param on_confirm fun(input?: string)
 function Input:new(config, opts, on_confirm)

@@ -2,7 +2,7 @@ local Input = require("lib.input")
 
 local M = {}
 
----@param config? wrapinput.Config
+---@param config? multinput.Config
 function M.setup(config)
 	vim.ui.input = function(opts, on_confirm)
 		local input = Input:new(config or {}, opts or {}, on_confirm)
