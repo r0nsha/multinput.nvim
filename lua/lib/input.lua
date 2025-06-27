@@ -1,0 +1,149 @@
+local utils = require("lib.utils")
+
+---@class wrapinput.Input
+---@field config wrapinput.Config
+---@field winnr integer
+---@field bufnr integer
+---@field on_confirm fun(input?: string)
+local Input = {}
+
+local defaults = {
+	opts = { numbers = "multiline" },
+	padding = 5,
+	width = { min = 20, max = 60 },
+	height = { min = 1, max = 6 },
+	win = {
+		title = "Input: ",
+		style = "minimal",
+		focusable = true,
+		relative = "cursor",
+		col = -1,
+		height = 1,
+	},
+}
+
+local group = vim.api.nvim_create_augroup("wrapinput.nvim", { clear = true })
+
+---@param config wrapinput.Config
+---@param opts any
+---@param on_confirm fun(input?: string)
+function Input:new(config, opts, on_confirm)
+	local i = {}
+	i.config = vim.tbl_deep_extend("force", defaults, config, { win = { title = opts.prompt or "Input: " } })
+	i.default = opts.default or ""
+	i.on_confirm = on_confirm or function() end
+	setmetatable(i, self)
+	self.__index = self
+	return i
+end
+
+---@param default string
+function Input:open(default)
+	local width =
+		utils.clamp(vim.fn.strdisplaywidth(default) + self.config.padding, self.config.width.min, self.config.width.max)
+
+	-- Position window relative to the cursor, such that it doesn't overlap with the cursor's line.
+	local curr_win = vim.api.nvim_get_current_win()
+	local cursor_row = vim.api.nvim_win_get_cursor(curr_win)[1]
+	local win_config = (cursor_row <= 3) and { anchor = "NW", row = 1, width = width }
+		or { anchor = "SW", row = 0, width = width }
+	self.config = vim.tbl_deep_extend("keep", self.config, { win = win_config })
+
+	-- Create buffer and floating window.
+	self.bufnr = vim.api.nvim_create_buf(false, true)
+	utils.set_options(
+		{ buftype = "prompt", bufhidden = "wipe", textwidth = self.config.width.max },
+		{ buf = self.bufnr }
+	)
+	vim.fn.prompt_setprompt(self.bufnr, "")
+
+	self.winnr = vim.api.nvim_open_win(self.bufnr, true, self.config.win)
+	utils.set_options({ wrap = true, linebreak = true, winhighlight = "Search:None" }, { win = self.winnr })
+
+	-- Write default value and put cursor at the end
+	vim.api.nvim_buf_set_text(self.bufnr, 0, 0, 0, 0, { default })
+	vim.cmd("startinsert")
+	vim.api.nvim_win_set_cursor(self.winnr, { 1, vim.str_utfindex(default, "utf-8") + 1 })
+
+	self:resize()
+	self:autocmds()
+	self:mappings()
+end
+
+---@param result string?
+function Input:close(result)
+	vim.cmd("stopinsert")
+	vim.api.nvim_win_close(self.winnr, true)
+	self.on_confirm(result)
+end
+
+function Input:resize()
+	local text = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false)
+	local line = table.concat(text, "")
+
+	if line == "" then
+		vim.api.nvim_win_set_width(
+			self.winnr,
+			utils.clamp(self.config.padding, self.config.width.min, self.config.width.max)
+		)
+		vim.api.nvim_win_set_height(self.winnr, 1)
+		return
+	end
+
+	local lines = utils.split_wrapped_lines(line, self.config.width.max)
+
+	local lens = vim.tbl_map(function(l)
+		return vim.fn.strdisplaywidth(l)
+	end, lines)
+	local width =
+		utils.clamp(math.max(unpack(lens)) + self.config.padding, self.config.width.min, self.config.width.max + #lines)
+	vim.api.nvim_win_set_width(self.winnr, width)
+
+	local height = utils.clamp(#lines, self.config.height.min, self.config.height.max)
+	vim.api.nvim_win_set_height(self.winnr, height)
+
+	if self.config.opts.numbers == "always" or (self.config.opts.numbers == "multiline" and height > 1) then
+		utils.set_option_if_globally_enabled("number", self.winnr)
+		utils.set_option_if_globally_enabled("relativenumber", self.winnr)
+	end
+
+	if
+		vim.api.nvim_get_option_value("number", { win = self.winnr })
+		or vim.api.nvim_get_option_value("relativenumber", { win = self.winnr })
+	then
+		vim.api.nvim_win_set_width(self.winnr, width + utils.get_linenr_width())
+	end
+end
+
+function Input:autocmds()
+	vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+		group = group,
+		buffer = self.bufnr,
+		callback = function()
+			self:resize()
+		end,
+	})
+end
+
+function Input:mappings()
+	---@param mode string|string[]
+	---@param lhs string
+	---@param rhs string|function
+	local function map(mode, lhs, rhs)
+		vim.keymap.set(mode, lhs, rhs, { buffer = self.bufnr })
+	end
+
+	map({ "n", "i", "v" }, "<cr>", function()
+		self:close(vim.api.nvim_buf_get_lines(self.bufnr, 0, 1, false)[1])
+	end)
+
+	map("n", "<esc>", function()
+		self:close()
+	end)
+
+	map("n", "q", function()
+		self:close()
+	end)
+end
+
+return Input
