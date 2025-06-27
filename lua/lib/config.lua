@@ -28,6 +28,7 @@ return {
             focusable = true,
             relative = "cursor",
             col = -1,
+            width = 1,
             height = 1,
         },
     },

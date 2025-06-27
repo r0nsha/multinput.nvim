@@ -33,8 +33,8 @@ function Input:open(default)
     -- Position window relative to the cursor, such that it doesn't overlap with the cursor's line.
     local curr_win = vim.api.nvim_get_current_win()
     local cursor_row = vim.api.nvim_win_get_cursor(curr_win)[1]
-    local win_config = (cursor_row <= 3) and { anchor = "NW", row = 1, width = 1 }
-        or { anchor = "SW", row = 0, width = 1 }
+    local win_config = (cursor_row <= 3) and { anchor = "NW", row = 1 }
+        or { anchor = "SW", row = 0 }
     self.config = vim.tbl_deep_extend("keep", self.config, { win = win_config })
 
     -- Create buffer and floating window.
