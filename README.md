@@ -2,7 +2,7 @@
 
 A floating `vim.ui.input` buffer that auto-resizes to fit its contents.
 
-![Demo](https://github.com/user-attachments/assets/bed09107-c0ab-4c50-bdfb-4e73893fa800)
+https://github.com/user-attachments/assets/bed09107-c0ab-4c50-bdfb-4e73893fa800
 
 ## Installation
 
