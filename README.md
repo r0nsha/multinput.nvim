@@ -1,6 +1,6 @@
 # multinput.nvim
 
-An attempt at creating a `vim.ui.input` that wraps its context in an auto-resizing buffer.
+A floating `vim.ui.input` buffer that auto-resizes to fit its contents.
 
 ## Installation
 

@@ -1,7 +1,7 @@
 multinput.txt                                                     multinput.nvim
 
-An attempt at creating a `vim.ui.input` that wraps its context       *multinput*
-in an auto-resizing buffer.
+A floating `vim.ui.input` buffer that auto-resizes to                *multinput*
+fit its contents.
 
 ================================================================================
 Table of Contents                                           *multinput-contents*
