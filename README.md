@@ -2,7 +2,7 @@
 
 A floating `vim.ui.input` buffer that auto-resizes to fit its contents.
 
-![Demo](https://github.com/r0nsha/multinput.nvim/assets/multinput_demo.mp4)
+![Demo](https://github.com/r0nsha/multinput.nvim/blob/master/assets/multinput_demo.mp4)
 
 ## Installation
 
