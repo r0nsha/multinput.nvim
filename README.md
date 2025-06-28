@@ -36,23 +36,28 @@ Here are the default configuration options:
 
 ```lua
 require('multinput').setup({
-  opts = {
-    numbers = "multiline",        -- "always" | "multiline" | "never"
-                                  -- "always" will always show line numbers
-                                  -- "multiline" will only show line numbers if the buffer's height is > 1
-                                  -- "never" will never show line numbers
-  },
-  padding = 5,                    -- How much padding will be added to the end of the buffer
-  width = { min = 20, max = 60 }, -- Controls the width limits of the buffer
-  height = { min = 1, max = 6 },  -- Controls the height limits of the buffer
+    opts = {
+      -- "always" | "multiline" | "never"
+      -- "always" will always show line numbers
+      -- "multiline" will only show line numbers if the buffer's height is > 1
+      -- "never" will never show line numbers
+      numbers = "never",
+    },
+    -- How much padding will be added to the end of the buffer
+    padding = 5,
+    -- Controls the width limits of the buffer
+    width = { min = 20, max = 60 },
+    -- Controls the height limits of the buffer
+    height = { min = 1, max = 6 },
     win = {
       title = "Input: ",
       style = "minimal",
       focusable = true,
       relative = "cursor",
       col = -1,
+      width = 1,
       height = 1,
-  },
+    },
 })
 ```
 

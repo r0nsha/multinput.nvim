@@ -49,7 +49,7 @@ Here are the default configuration options:
         -- "always" will always show line numbers
         -- "multiline" will only show line numbers if the buffer's height is > 1
         -- "never" will never show line numbers
-        numbers = "multiline",
+        numbers = "never",
       },
       -- How much padding will be added to the end of the buffer
       padding = 5,
@@ -57,13 +57,14 @@ Here are the default configuration options:
       width = { min = 20, max = 60 },
       -- Controls the height limits of the buffer
       height = { min = 1, max = 6 },
-        win = {
-          title = "Input: ",
-          style = "minimal",
-          focusable = true,
-          relative = "cursor",
-          col = -1,
-          height = 1,
+      win = {
+        title = "Input: ",
+        style = "minimal",
+        focusable = true,
+        relative = "cursor",
+        col = -1,
+        width = 1,
+        height = 1,
       },
     })
 <
