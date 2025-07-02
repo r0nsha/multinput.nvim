@@ -16,20 +16,20 @@
 ---@field max integer
 
 return {
-    ---@type multinput.Config
-    defaults = {
-        opts = { numbers = "never" },
-        padding = 5,
-        width = { min = 20, max = 60 },
-        height = { min = 1, max = 6 },
-        win = {
-            title = "Input: ",
-            style = "minimal",
-            focusable = true,
-            relative = "cursor",
-            col = -1,
-            width = 1,
-            height = 1,
-        },
+  ---@type multinput.Config
+  defaults = {
+    opts = { numbers = "never" },
+    padding = 5,
+    width = { min = 20, max = 60 },
+    height = { min = 1, max = 6 },
+    win = {
+      title = "Input: ",
+      style = "minimal",
+      focusable = true,
+      relative = "cursor",
+      col = -1,
+      width = 1,
+      height = 1,
     },
+  },
 }
