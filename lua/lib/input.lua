@@ -14,10 +14,11 @@ local group = vim.api.nvim_create_augroup("multinput.nvim", { clear = true })
 ---@param opts any
 ---@param on_confirm fun(input?: string)
 function Input:new(config, opts, on_confirm)
-  local i = {}
-  i.config = vim.tbl_deep_extend("force", defaults, config, { win = { title = opts.prompt or "Input: " } })
-  i.default = opts.default or ""
-  i.on_confirm = on_confirm or function() end
+  local i = {
+    config = vim.tbl_deep_extend("force", defaults, config, { win = { title = opts.prompt or "Input: " } }),
+    default = opts.default or "",
+    on_confirm = on_confirm or function() end,
+  }
   setmetatable(i, self)
   self.__index = self
   return i
