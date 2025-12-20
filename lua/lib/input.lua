@@ -42,12 +42,14 @@ function Input:open(default)
 
   -- Write default value and put cursor at the end
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, true, { default })
-  vim.cmd("startinsert")
-  vim.api.nvim_win_set_cursor(self.winnr, { 1, vim.str_utfindex(default, "utf-8") + 1 })
 
   self:resize()
   self:autocmds()
   self:mappings()
+
+  vim.api.nvim_win_call(self.winnr, function()
+    vim.cmd("startinsert!")
+  end)
 end
 
 ---@param result string?
