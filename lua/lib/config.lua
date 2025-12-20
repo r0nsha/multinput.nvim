@@ -1,8 +1,9 @@
 ---@class multinput.Config
----@field opts multinput.Opts
----@field width multinput.Limits
----@field height multinput.Limits
+---@field opts multinput.Opts Additional options, see multinput.Opts
+---@field width multinput.Limits The minimum and maximum width of the input buffer
+---@field height multinput.Limits The minimum and maximum height of the input buffer
 ---@field padding integer How much padding will be added to the end of the input buffer
+---@field completion boolean Whether to enable completion
 ---@field win vim.api.keyset.win_config
 
 ---@class multinput.Opts
@@ -22,6 +23,7 @@ return {
     padding = 5,
     width = { min = 20, max = 60 },
     height = { min = 1, max = 6 },
+    completion = true,
     win = {
       title = "Input: ",
       style = "minimal",

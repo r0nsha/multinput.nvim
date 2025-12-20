@@ -35,6 +35,7 @@ function Input:open(default)
   -- Create buffer and floating window.
   self.bufnr = vim.api.nvim_create_buf(false, true)
   utils.set_options({ buftype = "prompt", bufhidden = "wipe" }, { buf = self.bufnr })
+  vim.api.nvim_buf_set_var(self.bufnr, "completion", self.config.completion)
   vim.fn.prompt_setprompt(self.bufnr, "")
 
   self.winnr = vim.api.nvim_open_win(self.bufnr, true, self.config.win)
