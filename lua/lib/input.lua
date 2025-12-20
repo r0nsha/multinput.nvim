@@ -15,7 +15,9 @@ local group = vim.api.nvim_create_augroup("multinput.nvim", { clear = true })
 ---@param on_confirm fun(input?: string)
 function Input:new(config, opts, on_confirm)
   local i = {
-    config = vim.tbl_deep_extend("force", defaults, config, { win = { title = opts.prompt or "Input: " } }),
+    config = vim.tbl_deep_extend("force", defaults, config, {
+      win = { title = opts.prompt or "Input: " },
+    }),
     default = opts.default or "",
     on_confirm = on_confirm or function() end,
   }
@@ -26,20 +28,31 @@ end
 
 ---@param default string
 function Input:open(default)
+  self.mode = vim.fn.mode()
+
   -- Position window relative to the cursor, such that it doesn't overlap with the cursor's line.
-  local curr_win = vim.api.nvim_get_current_win()
-  local cursor_row = vim.api.nvim_win_get_cursor(curr_win)[1]
+  self.parent_win = vim.api.nvim_get_current_win()
+  local cursor_row = vim.api.nvim_win_get_cursor(self.parent_win)[1]
   local win_config = (cursor_row <= 3) and { anchor = "NW", row = 1 } or { anchor = "SW", row = 0 }
   self.config = vim.tbl_deep_extend("keep", self.config, { win = win_config })
 
   -- Create buffer and floating window.
   self.bufnr = vim.api.nvim_create_buf(false, true)
-  utils.set_options({ buftype = "prompt", bufhidden = "wipe" }, { buf = self.bufnr })
+  utils.set_options({
+    filetype = "multinput",
+    buftype = "prompt",
+    bufhidden = "wipe",
+    modifiable = true,
+  }, { buf = self.bufnr })
   vim.api.nvim_buf_set_var(self.bufnr, "completion", self.config.completion)
   vim.fn.prompt_setprompt(self.bufnr, "")
 
   self.winnr = vim.api.nvim_open_win(self.bufnr, true, self.config.win)
-  utils.set_options({ wrap = true, linebreak = true, winhighlight = "Search:None" }, { win = self.winnr })
+  utils.set_options({
+    wrap = true,
+    linebreak = true,
+    winhighlight = "Search:None",
+  }, { win = self.winnr })
 
   -- Write default value and put cursor at the end
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, true, { default })
@@ -57,6 +70,12 @@ end
 function Input:close(result)
   vim.cmd("stopinsert")
   vim.api.nvim_win_close(self.winnr, true)
+  if vim.api.nvim_win_is_valid(self.parent_win) then
+    vim.api.nvim_set_current_win(self.parent_win)
+    if self.mode == "i" then
+      vim.cmd("startinsert")
+    end
+  end
   self.on_confirm(result)
 end
 
@@ -122,11 +141,14 @@ function Input:mappings()
     vim.keymap.set(mode, lhs, rhs, { buffer = self.bufnr })
   end
 
-  map({ "n", "i", "v" }, "<cr>", function()
+  local function confirm()
     self:close(vim.api.nvim_buf_get_lines(self.bufnr, 0, 1, false)[1])
-  end)
+  end
+
+  map({ "n", "i", "v" }, "<cr>", confirm)
   map({ "i" }, "<a-cr>", function()
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<cr>", true, false, true), "n", true)
+    vim.cmd("stopinsert")
+    confirm()
   end)
 
   map("n", "<esc>", function()
