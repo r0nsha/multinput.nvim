@@ -48,10 +48,17 @@ function Input:open(default)
   vim.fn.prompt_setprompt(self.bufnr, "")
 
   self.winnr = vim.api.nvim_open_win(self.bufnr, true, self.config.win)
+
+  local winhighlight = self.config.winhighlight
+  if winhighlight and winhighlight ~= "" then
+    winhighlight = "Search:None," .. winhighlight
+  else
+    winhighlight = "Search:None"
+  end
   utils.set_options({
     wrap = true,
     linebreak = true,
-    winhighlight = "Search:None",
+    winhighlight = winhighlight,
   }, { win = self.winnr })
 
   -- Write default value and put cursor at the end

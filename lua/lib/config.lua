@@ -4,6 +4,7 @@
 ---@field height multinput.Limits The minimum and maximum height of the input buffer
 ---@field padding integer How much padding will be added to the end of the input buffer
 ---@field completion boolean Whether to enable completion
+---@field winhighlight string Window highlight groups (winhighlight)
 ---@field win vim.api.keyset.win_config
 
 ---@class multinput.Opts
@@ -24,6 +25,7 @@ return {
     width = { min = 20, max = 60 },
     height = { min = 1, max = 6 },
     completion = true,
+    winhighlight = "",
     win = {
       title = "Input: ",
       style = "minimal",
